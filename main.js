@@ -1,8 +1,5 @@
 
 
-let storyObjects = [];
-
-
 fetch('https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty')
     .then((data) => data.json())
     .then((storyIds) => {
