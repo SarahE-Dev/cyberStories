@@ -1,7 +1,7 @@
 
 
 let storyObjects = [];
-let allComments = [];
+let commentIds = [];
 
 fetch('https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty')
     .then((data) => data.json())
@@ -22,35 +22,76 @@ fetch('https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty')
         return Promise.all(requestArr)
     })
     .then(data=>{
-        let commentIds = [];
+        let num = 0;
         for(let object of data){
-            htmlElementMaker(object)
-            commentIds.push(object.kids)
+            num++
+            htmlElementMaker(object, num)
+            // commentIds.push(object.kids)
+            getStoryComments(object.kids, num)
         }
-        console.log(commentIds[0])
+        
+        
+        
     })
     
     
+   
     
-    function htmlElementMaker(story){
+    function htmlElementMaker(story, idNum){
         let link = story.url
                 if(link === undefined){
                     link = '';
                 }
-                let linkShown = link.split('/')
+                let linkShown = link.split('/');
+                let actualLink = linkShown[2];
+                if(actualLink === undefined){
+                    actualLink = ''
+                }
                 let numOfComments = story.descendants
                 if(numOfComments === undefined){
                     numOfComments = '0';
                 }
                 let html = `<li class="bg-gradient list-group-item d-flex justify-content-between align-items-start">
                 <div class="ms-2 me-auto small">
-                    <div class="fw-bold small">${story.title}<a href="${story.url}" class="small badge link-secondary">${linkShown[2]}</a></div>
-                    <p class="badge">${story.score} points   |   Submitted by: ${story.by}   |   ${numOfComments} comments |  <a id="${story.id}" class="small link-danger comments">View comments</a></p>
+                    <div class="fw-bold small">${story.title}<a href="${story.url}" class="small badge link-secondary">${actualLink}</a></div>
+                    <p class="badge">${story.score} points   |   Submitted by: ${story.by}   |   ${numOfComments} comments |  <a data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseExample" href="#collapseExample${idNum}" class="small link-danger comments">View comments</a></p>
                   </div>
                   <span class="badge bg-secondary rounded-pill">${story.score}</span>
-            </li>`
+            </li>
+          <div class="collapse" id="collapseExample${idNum}">
+            <div class="card card-body" >
+              <p id="comments${idNum}"></p>
+            </div>
+          </div>`
                $('ol').append(html)
     }
+
+   
+function getStoryComments(arr, num){
+    if(arr !== undefined){
+        const commentPromiseArr = []
+        for(let commentID of arr){
+            const request = fetch(`https://hacker-news.firebaseio.com/v0/item/${commentID}.json?print=pretty`)
+            commentPromiseArr.push(request)
+        }
+        Promise.all(commentPromiseArr)
+            .then(commmentRespArr =>{
+                const requestArr = []
+                for(let res of commmentRespArr){
+                    requestArr.push(res.json())
+                }
+                return Promise.all(requestArr)
+            })
+            .then(data=>{
+                let newHTML = ``
+                for(let index of data){
+                    newHTML += index.text
+                }
+                $(`#comments${num}`).append(newHTML) 
+            })
+    }
+}
+   
 
 
 
