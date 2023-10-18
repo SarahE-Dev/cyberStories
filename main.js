@@ -26,7 +26,6 @@ fetch('https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty')
         for(let object of data){
             num++
             htmlElementMaker(object, num)
-            // commentIds.push(object.kids)
             getStoryComments(object.kids, num)
         }
         
